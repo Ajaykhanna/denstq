@@ -1,0 +1,4 @@
+type:   transden/coupling
+input:  cube/dens
+donorfile:  file.cube/.dat
+acceptorfile: file.cube/.dat

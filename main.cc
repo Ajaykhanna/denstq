@@ -32,15 +32,9 @@ int main(int argc, char *argv[]) {
   string temps;
   comfile.getline(tempc,1000);
   temps = strtok(tempc, ":");
-  //type of calculation
-  calctype = strtok(NULL, ": ");
-  comfile.getline(tempc,1000);
-  temps = strtok(tempc, ":");
   //input file type
   inputtype = strtok(NULL, ":");
 
-  if (calctype == "transden") {
-    cout<<calctype<<endl;
     comfile.getline(tempc,1000);
     temps = strtok(tempc, ":");
     temps = strtok(NULL, " :");
@@ -58,92 +52,7 @@ int main(int argc, char *argv[]) {
     //Calculate transition dipole moment
     calcdip(atoms);
   
-  } else if (calctype == "coupling") {
-    cout<<calctype<<endl;
-
-    //declare donor and acceptor objects
-    Molecule donor,acceptor;
-
-    //get donor file name
-    comfile.getline(tempc,1000);
-    temps = strtok(tempc, ":");
-    temps = strtok(NULL, " :");
-    ifstream infile;
-    infile.open(temps.c_str());
-    if (!infile.good()) {
-      cout<<"cannot open donor file!"<<endl;
-      return -1;
-    }
-
-    //declare donor atoms and read in density
-    donor.atoms = collectDens(&donor,donor.atoms,infile);
-    
-    //project the donor density onto the nearest atom
-    outfile.open("donor_dens.dat");
-    projectdens(donor.natoms,donor.atoms,donor.dens,
-                donor.posx,donor.posy,donor.posz,
-                donor.nx,donor.ny,donor.nz,donor.densrad);
-    
-    //get acceptor file name
-    comfile.getline(tempc,1000);
-    temps = strtok(tempc, ":");
-    temps = strtok(NULL, " :");
-    infile.close();
-    infile.open(temps.c_str());
-    if(!infile.good()) {
-      cout<<"cannot open acceptor file!"<<endl;
-      return -1;
-    }
-
-    //declare donor atoms and read in density
-    acceptor.atoms = collectDens(&acceptor,acceptor.atoms,infile);
-    
-    //project the acceptor density onto the nearest atom
-    outfile.close();
-    outfile.open("acceptor_dens.dat");
-    projectdens(acceptor.natoms,acceptor.atoms,acceptor.dens,
-                acceptor.posx,acceptor.posy,acceptor.posz,
-                acceptor.nx,acceptor.ny,acceptor.nz,acceptor.densrad);
-    outfile.close();
-
-    //read the DA distance and increments
-    comfile.getline(tempc,1000);
-    temps = strtok(tempc,":");
-    temps = strtok(NULL, " ,");
-    double xrange = atof(temps.c_str());
-    temps = strtok(NULL, " ,");
-    double dx = atof(temps.c_str());
-    temps = strtok(NULL, " ,");
-    double yrange = atof(temps.c_str());
-    temps = strtok(NULL, " ,");
-    double dy = atof(temps.c_str());
-    temps = strtok(NULL, " ,");
-    double zrange = atof(temps.c_str());
-    temps = strtok(NULL, " ,");
-    double dz = atof(temps.c_str());
-    int xsteps = (int)(xrange/dx);
-
-    if (xsteps == 0) {
-      cout<<"xinc=0, setting xinc=1"<<endl;
-      xsteps = 1;
-    }
-
-
-    //return 0;
-
-    outfile.open("coupling.dat");
-    for (int j=0; j<xsteps; j++) {
-      double xdisp = 0 + j*dx;
-      for (int i=0; i<donor.natoms; i++) {
-        donor.atoms[i].x += xdisp;
-      }
-      //compute coupling from two cube files
-      double coupling = computeCoupling(&donor,&acceptor);
-      outfile<<xdisp<<" "<<coupling<<endl;
-    }
-    infile.close();
- }
-    
+      
   //tidy up
   comfile.close();
   outfile.close();

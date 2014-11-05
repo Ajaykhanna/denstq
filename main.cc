@@ -44,6 +44,7 @@ int main(int argc, char *argv[]) {
     //project the density onto the nearest atom
     //writes density to "density.dat"
     outfile.open("densoutput.dat");
+    outfile.precision(16);
     projectdens(natoms,atoms,dens,posx,posy,posz,nx,ny,nz,densrad);
 
     //Calculate transition dipole moment

@@ -34,19 +34,16 @@ int main(int argc, char *argv[]) {
   temps = strtok(tempc, ":");
   //input file type
   inputtype = strtok(NULL, ":");
-
     comfile.getline(tempc,1000);
     temps = strtok(tempc, ":");
     temps = strtok(NULL, " :");
     ifstream infile;
     infile.open(temps.c_str());
-
     //declare atom objects and read in densities
     Atom *atoms = collectDens(atoms,infile);
-
     //project the density onto the nearest atom
     //writes density to "density.dat"
-    outfile.open("output.dat");
+    outfile.open("densoutput.dat");
     projectdens(natoms,atoms,dens,posx,posy,posz,nx,ny,nz,densrad);
 
     //Calculate transition dipole moment
@@ -97,6 +94,8 @@ void projectdens(const int natoms, Atom *atoms, double ***dens, double posx[],
   for (int i=0; i<natoms; i++)
     atoms[i].dens *= sqrt(2);
   //print atomic positions and projected densities
+  outfile<<"Natoms : "<<natoms<<endl;
+  outfile<<"State energy : -1"<<endl;
   for (int i=0; i<natoms; i++) {
     outfile<<atoms[i].num+1<<" "<<atoms[i].type<<" "<<atoms[i].x<<" "<<atoms[i].y<<" "<<atoms[i].z<<" "<<atoms[i].dens*vol<<endl;
   }

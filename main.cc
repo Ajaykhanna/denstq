@@ -98,7 +98,7 @@ void projectdens(const int natoms, Atom *atoms, double ***dens, double posx[],
   outfile<<"Natoms : "<<natoms<<endl;
   outfile<<"State energy : -1"<<endl;
   for (int i=0; i<natoms; i++) {
-    outfile<<atoms[i].num+1<<" "<<atoms[i].type<<" "<<atoms[i].x<<" "<<atoms[i].y<<" "<<atoms[i].z<<" "<<atoms[i].dens*vol<<endl;
+    outfile<<atoms[i].num+1<<" "<<atoms[i].type<<" "<<atoms[i].x*0.529177249<<" "<<atoms[i].y*0.529177249<<" "<<atoms[i].z*0.529177249<<" "<<atoms[i].dens*vol<<endl;
   }
 }
 

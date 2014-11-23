@@ -32,25 +32,39 @@ int main(int argc, char *argv[]) {
   string temps;
   comfile.getline(tempc,1000);
   temps = strtok(tempc, ":");
-  //input file type
-  inputtype = strtok(NULL, ":");
-    comfile.getline(tempc,1000);
-    temps = strtok(tempc, ":");
-    temps = strtok(NULL, " :");
-    ifstream infile;
-    infile.open(temps.c_str());
-    //declare atom objects and read in densities
-    Atom *atoms = collectDens(atoms,infile);
-    //project the density onto the nearest atom
-    //writes density to "density.dat"
-    outfile.open("densoutput.dat");
-    outfile.precision(16);
-    projectdens(natoms,atoms,dens,posx,posy,posz,nx,ny,nz,densrad);
+  inputtype = strtok(NULL, ": ");
 
-    //Calculate transition dipole moment
-    calcdip(atoms);
+  //number of electrons
+  comfile.getline(tempc,1000);
+  temps = strtok(tempc,":");
+  nelec = atoi(strtok(NULL,": "));
+  cout<<"nelectrons =  "<<nelec<<endl;
   
-      
+  //density character
+  comfile.getline(tempc,1000);
+  temps = strtok(tempc,":");
+  statetype = strtok(NULL,": ");
+  cout<<"parsing cube for "<<statetype<<" density"<<endl;
+    
+  //input file name
+  comfile.getline(tempc,1000);
+  temps = strtok(tempc, ":");
+  temps = strtok(NULL, " :");
+  ifstream infile;
+  infile.open(temps.c_str());
+  
+  //declare atom objects and read in densities
+  Atom *atoms = collectDens(atoms,infile);
+  
+  //project the density onto the nearest atom
+  //writes density to "density.dat"
+  outfile.open("densoutput.dat");
+  outfile.precision(16);
+  projectdens(natoms,atoms,dens,posx,posy,posz,nx,ny,nz,densrad,nelec,statetype);
+
+  //Calculate transition dipole moment
+  calcdip(atoms);
+    
   //tidy up
   comfile.close();
   outfile.close();
@@ -66,7 +80,8 @@ int main(int argc, char *argv[]) {
  * ***************************************/
 
 void projectdens(const int natoms, Atom *atoms, double ***dens, double posx[], 
-  double posy[], double posz[], int nx, int ny, int nz,double ***densrad) {
+  double posy[], double posz[], int nx, int ny, int nz,double ***densrad,
+  int nelec,string type) {
   
   double vol = dx1*dy2*dz3;
 
@@ -86,8 +101,10 @@ void projectdens(const int natoms, Atom *atoms, double ***dens, double posx[],
           }
         } //end atoms
         //add density to closest atom
-
-        atoms[closest].dens += dens[i][j][k];
+        if (type == "state")
+          atoms[closest].dens += dens[i][j][k] / nelec;
+        else
+          atoms[closest].dens += dens[i][j][k];
       } //end z
     } //end y
   } //end x

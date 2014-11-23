@@ -13,6 +13,8 @@ using namespace std;
  * ***************************/
 int natoms;
 const double thresh=1.e-10;
+int nelec; //total number of electrons in molecule
+string statetype; //type of density to use
 int nx,ny,nz;
 double dx1,dx2,dx3,dy1,dy2,dy3,dz1,dz2,dz3;
 double ox,oy,oz;
@@ -70,7 +72,8 @@ Molecule::Molecule() {
 
 void projectdens(const int natoms, Atom *atoms, double ***dens, 
                 double posx[], double posy[], double posz[], 
-                int nx, int ny, int nz, double ***densrad);
+                int nx, int ny, int nz, double ***densrad,
+                int nelec, string type);
 Atom *collectDens(Atom *atoms,ifstream &infile);
 Atom *collectDens(Molecule *mol, Atom *atoms,ifstream &infile);
 double computeCoupling(Molecule *donor, Molecule *acceptor);

@@ -101,21 +101,26 @@ void projectdens(const int natoms, Atom *atoms, double ***dens, double posx[],
           }
         } //end atoms
         //add density to closest atom
-        if (type == "state")
-          atoms[closest].dens += dens[i][j][k] / nelec;
-        else
+        if (type == "state") {
           atoms[closest].dens += dens[i][j][k];
+        } else {
+          atoms[closest].dens += dens[i][j][k];
+        }
       } //end z
     } //end y
   } //end x
   
-  for (int i=0; i<natoms; i++)
-    atoms[i].dens *= sqrt(2);
+  for (int i=0; i<natoms; i++) {
+    if (type == "transition")
+      atoms[i].dens *= sqrt(2)*vol;
+    else
+      atoms[i].dens = atoms[i].dens*vol - atoms[i].charge;
+  }
   //print atomic positions and projected densities
   outfile<<"Natoms : "<<natoms<<endl;
   outfile<<"State energy : -1"<<endl;
   for (int i=0; i<natoms; i++) {
-    outfile<<atoms[i].num+1<<" "<<atoms[i].type<<" "<<atoms[i].x*0.529177249<<" "<<atoms[i].y*0.529177249<<" "<<atoms[i].z*0.529177249<<" "<<atoms[i].dens*vol<<endl;
+    outfile<<atoms[i].num+1<<" "<<atoms[i].type<<" "<<atoms[i].x*0.529177249<<" "<<atoms[i].y*0.529177249<<" "<<atoms[i].z*0.529177249<<" "<<atoms[i].dens<<endl;
   }
 }
 
@@ -348,6 +353,7 @@ void calcdip(Atom *atoms) {
   double dx,dy,dz,sum,sump,summ;
   dx=0.; dy=0.; dz=0.; sum=0.; sump=0.;summ=0.;
   double vol = dx1*dy2*dz3;
+  //vol *= 0.529177249*0.529177249*0.529177249;
 
   for (int i=0; i<natoms; i++) {
     dx += atoms[i].x * atoms[i].dens;
@@ -359,16 +365,12 @@ void calcdip(Atom *atoms) {
     else if (atoms[i].dens < 0)
       summ += atoms[i].dens;
   
-    cout<<"atom "<<i<<", "<<atoms[i].type<<", "<<atoms[i].dens*vol<<endl;
+    cout<<"atom "<<i<<", "<<atoms[i].type<<", "<<atoms[i].dens<<", "<<atoms[i].charge<<" "<<vol<<endl;
   }
   
-  dx *= vol;
-  dy *= vol;
-  dz *= vol;
-
   cout<<"net transition charge = "<<sum<<endl;
   cout<<"negative density = "<<summ<<endl;
   cout<<"positive density = "<<sump<<endl;
   cout<<"Transition dipole moment = "<<dx<<" x, "<<dy<<" y, "<<dz<<" z"<<endl;
-  cout<<"Magnitude t = "<<sqrt(dx*dx+dy*dy+dz*dz)/0.393456<<" D"<<endl;
+  cout<<"Magnitude t = "<<sqrt(2)*sqrt(dx*dx+dy*dy+dz*dz)/0.393456<<" D"<<endl;
 }

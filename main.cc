@@ -7,11 +7,10 @@
  *
  * Input file has the following format:
  *
- * type:   transden/coupling
  * input:  cube/dens
- * donorfile:  file.cube/.dat
- * acceptorfile: file.cube/.dat
- * DA distance:  x,dx,y,dy,z,dz (in Angstroms)
+ * number of electrons: nelectrons
+ * transition/state density: state/transition
+ * cubefile:  file.cube/.dat
  *
  * note:  currently only cube files supported
  *        DA distance ranges from dx to x in increments of dx
@@ -60,11 +59,15 @@ int main(int argc, char *argv[]) {
   //writes density to "density.dat"
   outfile.open("densoutput.dat");
   outfile.precision(16);
-  projectdens(natoms,atoms,dens,posx,posy,posz,nx,ny,nz,densrad,nelec,statetype);
+  Dens *density = new Dens[nx*ny*nz];
+  projectdens(natoms,atoms,dens,posx,posy,posz,nx,ny,nz,density,nelec,statetype);
 
   //Calculate transition dipole moment
   calcdip(atoms);
     
+  //Calculate Voronoi tessellations
+  calcVoronoi(natoms,density,atoms);
+
   //tidy up
   comfile.close();
   outfile.close();
@@ -75,12 +78,36 @@ int main(int argc, char *argv[]) {
 /*******************************************************
  ******************************************************/
 
+/***************************************
+ * Calculate the vironoi tessellations
+ * *************************************/
+void calcVoronoi(int natoms, Dens *density, Atom *atoms) {
+  for (int i=0; i<natoms; i++) {
+    for (int j=0; j<nx*ny*nz; j++) {
+      if (density[j].atom != i) continue;
+      for (int k=0; k<nx*ny*nz; k++) {
+        if (j==k) continue;
+        //both negative
+        if ((density[j].x<0) && (density[k].x<0)) {
+          if (density[j].x < density[k].x)
+            density[j].xmax = true;
+        } 
+        //j negative k positive
+        else if {
+        
+        }
+        //j positive k negative
+      
+      }
+    }
+  }
+}
 /*****************************************
  * Project the density onto nearest atom
  * ***************************************/
 
 void projectdens(const int natoms, Atom *atoms, double ***dens, double posx[], 
-  double posy[], double posz[], int nx, int ny, int nz,double ***densrad,
+  double posy[], double posz[], int nx, int ny, int nz,Dens *density,
   int nelec,string type) {
   
   double vol = dx1*dy2*dz3;
@@ -98,6 +125,16 @@ void projectdens(const int natoms, Atom *atoms, double ***dens, double posx[],
           if (dist2 < closestdist) {
             closest = l;
             closestdist = dist2;
+            density[i+j*nx+k*nx*ny].x = posx[i];
+            density[i+j*nx+k*nx*ny].y = posy[j]; 
+            density[i+j*nx+k*nx*ny].z = posz[k];
+            density[i+j*nx+k*nx*ny].atom = l;
+            density[i+j*nx+k*nx*ny].xmax = true;
+            density[i+j*nx+k*nx*ny].ymax = true;
+            density[i+j*nx+k*nx*ny].zmax = true;
+            density[i+j*nx+k*nx*ny].xmin = true;
+            density[i+j*nx+k*nx*ny].ymin = true;
+            density[i+j*nx+k*nx*ny].zmin = true;
           }
         } //end atoms
         //add density to closest atom

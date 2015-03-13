@@ -37,6 +37,12 @@ const string str_Atom[] = { " X",
 														"Md","No","Lr","Rf","Db","Sg","Bh","Hs","Mt","Ds",
 														"Rg","Cn","Uut","Fl","Uup","Lv","Uus","Uuo",
                           };
+struct Dens {
+  double x,y,z;
+  int atom;
+  bool xmax,ymax,zmax;
+  bool xmin,ymin,zmin;
+};
 
 class Atom {
   public:
@@ -72,8 +78,9 @@ Molecule::Molecule() {
 
 void projectdens(const int natoms, Atom *atoms, double ***dens, 
                 double posx[], double posy[], double posz[], 
-                int nx, int ny, int nz, double ***densrad,
+                int nx, int ny, int nz, Dens *density,
                 int nelec, string type);
+void calcVoronoi(int natoms,Dens *density,Atom *atoms);
 Atom *collectDens(Atom *atoms,ifstream &infile);
 Atom *collectDens(Molecule *mol, Atom *atoms,ifstream &infile);
 double computeCoupling(Molecule *donor, Molecule *acceptor);

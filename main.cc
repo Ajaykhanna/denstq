@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
   calcdip(atoms);
     
   //Calculate Voronoi tessellations
-  calcVoronoi(natoms,density,atoms);
+  //calcVoronoi(natoms,density,atoms);
 
   //tidy up
   comfile.close();
@@ -83,21 +83,45 @@ int main(int argc, char *argv[]) {
  * *************************************/
 void calcVoronoi(int natoms, Dens *density, Atom *atoms) {
   for (int i=0; i<natoms; i++) {
+    cout<<"Tessellating atom "<<i<<endl;
     for (int j=0; j<nx*ny*nz; j++) {
       if (density[j].atom != i) continue;
+      cout<<"j element "<<j<<endl;
       for (int k=0; k<nx*ny*nz; k++) {
+        if (density[k].atom != i) continue;
         if (j==k) continue;
         //both negative
         if ((density[j].x<0) && (density[k].x<0)) {
-          if (density[j].x < density[k].x)
-            density[j].xmax = true;
+          if (density[j].x < density[k].x) {
+            density[j].xmax = false;
+            density[k].xmin = false;
+          } else {
+            density[j].xmin = false;
+            density[k].xmax = false;
+          }
+        }
+        //both positive (or at origin)
+        else if ((density[j].x>=0) && (density[k].x>=0)) {
+          if (density[j].x > density[k].x) {
+            density[k].xmax = false;
+            density[j].xmin = false;
+          } else {
+            density[k].xmin = false;
+            density[j].xmax = false;
+          }
         } 
+
         //j negative k positive
-        else if {
-        
+        else if ((density[j].x<=0) && (density[k].x>=0)) {
+          density[k].xmin = false;
+          density[j].xmax = false;
         }
         //j positive k negative
-      
+        else if ((density[k].x<=0) && (density[j].x>=0)) {
+          density[k].xmax = false;
+          density[j].xmin = false;
+        }
+        else cout<<"no conditions met, oops"<<" "<<j<<" "<<k<<" "<<density[j].x<<" "<<density[k].x<<endl;
       }
     }
   }

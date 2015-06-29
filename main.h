@@ -37,12 +37,29 @@ const string str_Atom[] = { " X",
 														"Md","No","Lr","Rf","Db","Sg","Bh","Hs","Mt","Ds",
 														"Rg","Cn","Uut","Fl","Uup","Lv","Uus","Uuo",
                           };
-struct Dens {
+class Dens {
+public:
   double x,y,z;
   int atom;
+  int index;
   bool xmax,ymax,zmax;
   bool xmin,ymin,zmin;
+  bool surface;
+  double charge;
+
+  Dens operator= (const Dens& d);
 };
+/** Density copy operator **/
+Dens Dens::operator=(const Dens& d) {
+  this->x = d.x;
+  this->y = d.y;
+  this->z = d.z;
+  this->atom = d.atom;
+  this->index = d.index;
+  this->surface = d.surface;
+  this->charge = d.charge;
+  return *this;
+}
 
 class Atom {
   public:
@@ -53,9 +70,31 @@ class Atom {
   double r;
   double dens;
   double charge;
+  int denselements;
+  int surfaceelements;
+  double dist(int,int,int);
+  double distance(Dens d);
+  Dens *thisdens;
+  int current;
 
-  Atom() {dens = 0.;};
+  Atom() {dens = 0.;denselements=0;current=0;};
 };
+
+double Atom::dist(int x,int y,int z) {
+  double dx = this->x-x;
+  double dy = this->y-y;
+  double dz = this->z-z;
+  double r = sqrt(dx*dx+dy+dy+dz*dz);
+  return r;
+}
+
+double Atom::distance(Dens d) {
+  double dx = this->x-d.x;
+  double dy = this->y-d.y;
+  double dz = this->z-d.z;
+  double r = sqrt(dx*dx+dy+dy+dz*dz);
+  return r;
+}
 
 class Molecule {
   public:

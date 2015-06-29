@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
   calcdip(atoms);
     
   //Calculate Voronoi tessellations
-  //calcVoronoi(natoms,density,atoms);
+  calcVoronoi(natoms,density,atoms);
 
   //tidy up
   comfile.close();
@@ -82,49 +82,36 @@ int main(int argc, char *argv[]) {
  * Calculate the vironoi tessellations
  * *************************************/
 void calcVoronoi(int natoms, Dens *density, Atom *atoms) {
+  
+  /** allocate density elements around each atom  **/
   for (int i=0; i<natoms; i++) {
     cout<<"Tessellating atom "<<i<<endl;
-    for (int j=0; j<nx*ny*nz; j++) {
-      if (density[j].atom != i) continue;
-      cout<<"j element "<<j<<endl;
-      for (int k=0; k<nx*ny*nz; k++) {
-        if (density[k].atom != i) continue;
-        if (j==k) continue;
-        //both negative
-        if ((density[j].x<0) && (density[k].x<0)) {
-          if (density[j].x < density[k].x) {
-            density[j].xmax = false;
-            density[k].xmin = false;
-          } else {
-            density[j].xmin = false;
-            density[k].xmax = false;
-          }
-        }
-        //both positive (or at origin)
-        else if ((density[j].x>=0) && (density[k].x>=0)) {
-          if (density[j].x > density[k].x) {
-            density[k].xmax = false;
-            density[j].xmin = false;
-          } else {
-            density[k].xmin = false;
-            density[j].xmax = false;
-          }
-        } 
-
-        //j negative k positive
-        else if ((density[j].x<=0) && (density[k].x>=0)) {
-          density[k].xmin = false;
-          density[j].xmax = false;
-        }
-        //j positive k negative
-        else if ((density[k].x<=0) && (density[j].x>=0)) {
-          density[k].xmax = false;
-          density[j].xmin = false;
-        }
-        else cout<<"no conditions met, oops"<<" "<<j<<" "<<k<<" "<<density[j].x<<" "<<density[k].x<<endl;
-      }
-    }
+    atoms[i].thisdens = new Dens[atoms[i].denselements];
   }
+
+  /** assign density elements to each atom **/
+  for (int i=0; i<nx*ny*nz; i++) {
+    atoms[density[i].atom].thisdens[atoms[density[i].atom].current]=density[i];
+    atoms[density[i].atom].current++;
+  }
+
+  /** Determine center of charge **/
+  for (int i=0; i<natoms; i++) {
+    double sum=0.;
+    double sumx=0.;
+    double sumy=0.;
+    double sumz=0.;
+    for (int j=0; j<atoms[i].denselements; j++) {
+      sumx += atoms[i].thisdens[j].charge*atoms[i].thisdens[j].x;
+      sumy += atoms[i].thisdens[j].charge*atoms[i].thisdens[j].y;     
+      sumz += atoms[i].thisdens[j].charge*atoms[i].thisdens[j].z;     
+    }
+    sumx /= atoms[i].dens;
+    sumy /= atoms[i].dens;
+    sumz /= atoms[i].dens;
+    cout<<"charge x = "<<sumx<<", atom x = "<<atoms[i].dens<<endl;
+  }
+
 }
 /*****************************************
  * Project the density onto nearest atom
@@ -136,11 +123,14 @@ void projectdens(const int natoms, Atom *atoms, double ***dens, double posx[],
   
   double vol = dx1*dy2*dz3;
 
+//#pragma omp parallel for
   for (int i=0; i<nx; i++) {
     for (int j=0; j<ny; j++) {
       for (int k=0; k<nz; k++) {
+        int index = i+j*nx+k*nx*ny;
         int closest=-1;
         double closestdist = 100.;
+
         for (int l=0; l<natoms; l++) {
           double dist2,closestdis;
           dist2 = ((atoms[l].x - posx[i] )*(atoms[l].x - posx[i])
@@ -159,14 +149,13 @@ void projectdens(const int natoms, Atom *atoms, double ***dens, double posx[],
             density[i+j*nx+k*nx*ny].xmin = true;
             density[i+j*nx+k*nx*ny].ymin = true;
             density[i+j*nx+k*nx*ny].zmin = true;
+            density[index].surface = true;
           }
         } //end atoms
         //add density to closest atom
-        if (type == "state") {
-          atoms[closest].dens += dens[i][j][k];
-        } else {
-          atoms[closest].dens += dens[i][j][k];
-        }
+        density[index].charge = dens[i][j][k];
+        atoms[closest].dens += dens[i][j][k];
+        atoms[closest].denselements ++;
       } //end z
     } //end y
   } //end x
@@ -175,14 +164,17 @@ void projectdens(const int natoms, Atom *atoms, double ***dens, double posx[],
     if (type == "transition")
       atoms[i].dens *= sqrt(2)*vol;
     else
-      atoms[i].dens = atoms[i].dens*vol - atoms[i].charge;
+      atoms[i].dens = (atoms[i].dens*vol - atoms[i].charge);
   }
   //print atomic positions and projected densities
   outfile<<"Natoms : "<<natoms<<endl;
-  outfile<<"State energy : -1"<<endl;
+  //outfile<<"State energy : -1"<<endl;
+  double sum=0.;
   for (int i=0; i<natoms; i++) {
+    sum += atoms[i].dens;
     outfile<<atoms[i].num+1<<" "<<atoms[i].type<<" "<<atoms[i].x*0.529177249<<" "<<atoms[i].y*0.529177249<<" "<<atoms[i].z*0.529177249<<" "<<atoms[i].dens<<endl;
   }
+  cout<<"Sum of charges = "<<sum<<endl;
 }
 
 Atom *collectDens(Atom *atoms, ifstream &infile) {
@@ -263,6 +255,7 @@ Atom *collectDens(Atom *atoms, ifstream &infile) {
   double sum=0.;
   double dx,dy,dz;
   dx=0.; dy=0.; dz=0.;
+//#pragma omp parallel for
   for (int i=0; i<nx; i++) {
     posx[i] = ox + i*dx1;
     for (int j=0; j<ny; j++) {

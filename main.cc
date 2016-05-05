@@ -85,7 +85,7 @@ void calcVoronoi(int natoms, Dens *density, Atom *atoms) {
   
   /** allocate density elements around each atom  **/
   for (int i=0; i<natoms; i++) {
-    cout<<"Tessellating atom "<<i<<endl;
+    //cout<<"Tessellating atom "<<i<<endl;
     atoms[i].thisdens = new Dens[atoms[i].denselements];
   }
 
@@ -109,7 +109,7 @@ void calcVoronoi(int natoms, Dens *density, Atom *atoms) {
     sumx /= atoms[i].dens;
     sumy /= atoms[i].dens;
     sumz /= atoms[i].dens;
-    cout<<"charge x = "<<sumx<<", atom x = "<<atoms[i].dens<<endl;
+    //cout<<"charge x = "<<sumx<<", atom x = "<<atoms[i].dens<<endl;
   }
 
 }
@@ -419,7 +419,7 @@ void calcdip(Atom *atoms) {
     else if (atoms[i].dens < 0)
       summ += atoms[i].dens;
   
-    cout<<"atom "<<i<<", "<<atoms[i].type<<", "<<atoms[i].dens<<", "<<atoms[i].charge<<" "<<vol<<endl;
+    //cout<<"atom "<<i<<", "<<atoms[i].type<<", "<<atoms[i].dens<<", "<<atoms[i].charge<<" "<<vol<<endl;
   }
   
   cout<<"net transition charge = "<<sum<<endl;
